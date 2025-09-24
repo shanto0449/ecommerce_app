@@ -97,7 +97,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            {{ $product->featured ? 'Yes' : 'No' }}
+                                            {{ $product->featured == 1 ? 'Yes' : 'No' }}
                                         </td>
                                         <td>
                                             {{ $product->stock_status == 'instock' ? 'In Stock' : 'Out of Stock' }}
