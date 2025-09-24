@@ -50,6 +50,45 @@ class AdminController extends Controller
         return redirect()->route('admin.brands')->with('success', 'Brand added successfully.');
     }
 
+    public function brand_edit($id)
+    {
+        $brand = Brand::findOrFail($id);
+        return view('admin.brand-edit', compact('brand'));
+    }
+    
+    public function brand_update(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'slug' => 'required|unique:brands,slug,' . $request->id,
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+        
+        $brand = Brand::findOrFail($request->id);
+        $brand->name = $request->name;
+        $brand->slug = Str::slug($request->slug);
+        
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($brand->image && file_exists(public_path('uploads/brands/' . $brand->image))) {
+                unlink(public_path('uploads/brands/' . $brand->image));
+            }
+            
+            $image = $request->file('image');
+            $file_extension = $request->file('image')->extension();
+            $file_name = Carbon::now()->timestamp . '.' . $file_extension;
+            
+            $this->GenerateBrandThumbailsImage($image, $file_name);
+            
+            $brand->image = $file_name;
+        }
+        
+        $brand->save();
+
+        return redirect()->route('admin.brands')->with('success', 'Brand updated successfully.');
+    }
+
+
     public function GenerateBrandThumbailsImage($image, $imageName)
     {
         $destinationPath = public_path('uploads/brands/');
@@ -68,4 +107,18 @@ class AdminController extends Controller
         
         $img->save($destinationPath . $imageName);
     }
+
+    public function brand_delete($id)
+    {
+        $brand = Brand::findOrFail($id);
+        
+        if ($brand->image && file_exists(public_path('uploads/brands/' . $brand->image))) {
+            unlink(public_path('uploads/brands/' . $brand->image));
+        }
+        
+        $brand->delete();
+
+        return redirect()->route('admin.brands')->with('success', 'Brand deleted successfully.');
+    }
+
 }
