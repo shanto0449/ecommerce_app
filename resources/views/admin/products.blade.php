@@ -81,7 +81,7 @@
                                                 <span class="text-muted">-</span>
                                             @endif
                                         </td>
-                                        <td>{{ $product->sku }}</td>
+                                        <td>{{ $product->SKU }}</td>
                                         <td>
                                             @if ($product->category)
                                                 {{ $product->category->name }}
@@ -110,12 +110,12 @@
                                                         <i class="icon-eye"></i>
                                                     </div>
                                                 </a>
-                                                <a href="">
+                                                <a href="{{ route('admin.product.edit', $product->id) }}">
                                                     <div class="item edit">
                                                         <i class="icon-edit-3"></i>
                                                     </div>
                                                 </a>
-                                                <form action="" method="POST">
+                                                <form action="{{ route('admin.product.delete', $product->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
                                                     <div class="item text-danger delete">

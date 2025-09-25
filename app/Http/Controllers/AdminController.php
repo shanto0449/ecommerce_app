@@ -328,4 +328,113 @@ class AdminController extends Controller
 
         $img->save($destinationPath . $imageName);
     }
+
+    public function product_edit($id)
+    {
+        $product = Product::findOrFail($id);
+        $categories = Category::orderBy('name', 'ASC')->get();
+        $brands = Brand::orderBy('name', 'ASC')->get();
+        return view('admin.product-edit', compact('product', 'categories', 'brands'));
+    }
+
+    public function product_update(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'slug' => 'required|unique:products,slug,' . $request->id,
+            'regular_price' => 'required|numeric',
+            'sale_price' => 'nullable|numeric',
+            'SKU' => 'required|unique:products,SKU,' . $request->id,
+            'stock_status' => 'required|in:instock,outofstock',
+            'featured' => 'nullable|boolean',
+            'quantity' => 'required|integer',
+            'category_id' => 'nullable|exists:categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'short_description' => 'nullable|string',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $product = Product::findOrFail($request->id);
+        $product->name = $request->name;
+        $product->slug = Str::slug($request->slug);
+        $product->regular_price = $request->regular_price;
+        $product->sale_price = $request->sale_price;
+        $product->SKU = $request->SKU;
+        $product->stock_status = $request->stock_status;
+        $product->featured = $request->has('featured') ? 1 : 0;
+        $product->quantity = $request->quantity;
+        $product->category_id = $request->category_id;
+        $product->brand_id = $request->brand_id;
+        $product->short_description = $request->short_description;
+        $product->description = $request->description;
+
+        // Handle main image update
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($product->image && file_exists(public_path('uploads/products/thumbnails/' . $product->image))) {
+                unlink(public_path('uploads/products/thumbnails/' . $product->image));
+            }
+
+            $image = $request->file('image');
+            $file_extension = $request->file('image')->extension();
+            $file_name = Carbon::now()->timestamp . '.' . $file_extension;
+
+            $this->GenerateProductThumbailsImage($image, $file_name);
+
+            $product->image = $file_name;
+        }
+
+        // Handle gallery images update
+        if ($request->hasFile('images')) {
+            // Delete old gallery images if exist
+            if ($product->images) {
+                $oldImages = explode(',', $product->images);
+                foreach ($oldImages as $oldImage) {
+                    $oldImage = trim($oldImage);
+                    if ($oldImage && file_exists(public_path('uploads/products/thumbnails/' . $oldImage))) {
+                        unlink(public_path('uploads/products/thumbnails/' . $oldImage));
+                    }
+                }
+            }
+
+            $imageFilenames = [];
+            foreach ($request->file('images') as $image) {
+                $file_extension = $image->extension();
+                $file_name = Carbon::now()->timestamp . '_' . uniqid() . '.' . $file_extension;
+                
+                $this->GenerateProductThumbailsImage($image, $file_name);
+                $imageFilenames[] = $file_name;
+            }
+            $product->images = implode(',', $imageFilenames);
+        }
+
+        $product->save();
+        return redirect()->route('admin.products')->with('success', 'Product updated successfully.');
+    }
+
+    public function product_delete($id)
+    {
+        $product = Product::findOrFail($id);
+
+        if ($product->image && file_exists(public_path('uploads/products/thumbnails/' . $product->image))) {
+            unlink(public_path('uploads/products/thumbnails/' . $product->image));
+        }
+
+        // Delete gallery images if exist
+        if ($product->images) {
+            $oldImages = explode(',', $product->images);
+            foreach ($oldImages as $oldImage) {
+                $oldImage = trim($oldImage);
+                if ($oldImage && file_exists(public_path('uploads/products/thumbnails/' . $oldImage))) {
+                    unlink(public_path('uploads/products/thumbnails/' . $oldImage));
+                }
+            }
+        }
+
+        $product->delete();
+
+        return redirect()->route('admin.products')->with('success', 'Product deleted successfully.');
+    }
 }
