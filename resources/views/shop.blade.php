@@ -29,38 +29,27 @@
                         </h5>
                         <div id="accordion-filter-1" class="accordion-collapse collapse show border-0"
                             aria-labelledby="accordion-heading-1" data-bs-parent="#categories-list">
-                            <div class="accordion-body px-0 pb-0 pt-3">
+                            <div class="accordion-body px-0 pb-0 pt-3 category-list">
                                 <ul class="list list-inline mb-0">
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Dresses</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Shorts</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Sweatshirts</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Swimwear</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Jackets</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">T-Shirts & Tops</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Jeans</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Trousers</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Men</a>
-                                    </li>
-                                    <li class="list-item">
-                                        <a href="#" class="menu-link py-1">Jumpers & Cardigans</a>
-                                    </li>
+                                    @foreach ($categories as $category)
+                                        @php
+                                            // Prefer request value if present, fallback to controller-provided $f_categories
+                                            $fc = request()->get('categories', $f_categories ?? '');
+                                            $fcArr = $fc === '' ? [] : explode(',', $fc);
+                                        @endphp
+
+                                        <li class="list-item">
+                                            <span class="menu-link py-1">
+                                                <input type="checkbox" class="chk-category" name="categories"
+                                                    value="{{ $category->id }}"
+                                                    @if (in_array((string) $category->id, $fcArr)) checked="checked" @endif>
+                                                {{ $category->name }}
+                                            </span>
+                                            <span class="text-right float-end">
+                                                {{ $category->products->count() }}
+                                            </span>
+                                        </li>
+                                    @endforeach
                                 </ul>
                             </div>
                         </div>
@@ -164,56 +153,22 @@
                         <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0"
                             aria-labelledby="accordion-heading-brand" data-bs-parent="#brand-filters">
                             <div class="search-field multi-select accordion-body px-0 pb-0">
-                                <select class="d-none" multiple name="total-numbers-list">
-                                    <option value="1">Adidas</option>
-                                    <option value="2">Balmain</option>
-                                    <option value="3">Balenciaga</option>
-                                    <option value="4">Burberry</option>
-                                    <option value="5">Kenzo</option>
-                                    <option value="5">Givenchy</option>
-                                    <option value="5">Zara</option>
-                                </select>
-                                <div class="search-field__input-wrapper mb-3">
-                                    <input type="text" name="search_text"
-                                        class="search-field__input form-control form-control-sm border-light border-2"
-                                        placeholder="Search" />
-                                </div>
-                                <ul class="multi-select__list list-unstyled">
-                                    <li
-                                        class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                                        <span class="me-auto">Adidas</span>
-                                        <span class="text-secondary">2</span>
-                                    </li>
-                                    <li
-                                        class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                                        <span class="me-auto">Balmain</span>
-                                        <span class="text-secondary">7</span>
-                                    </li>
-                                    <li
-                                        class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                                        <span class="me-auto">Balenciaga</span>
-                                        <span class="text-secondary">10</span>
-                                    </li>
-                                    <li
-                                        class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                                        <span class="me-auto">Burberry</span>
-                                        <span class="text-secondary">39</span>
-                                    </li>
-                                    <li
-                                        class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                                        <span class="me-auto">Kenzo</span>
-                                        <span class="text-secondary">95</span>
-                                    </li>
-                                    <li
-                                        class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                                        <span class="me-auto">Givenchy</span>
-                                        <span class="text-secondary">1092</span>
-                                    </li>
-                                    <li
-                                        class="search-suggestion__item multi-select__item text-primary js-search-select js-multi-select">
-                                        <span class="me-auto">Zara</span>
-                                        <span class="text-secondary">48</span>
-                                    </li>
+                                <ul class="list list-inline mb-0 brand-list">
+                                    @foreach ($brands as $brand)
+                                        <li class="list-item">
+                                            <span class="menu-link py-1">
+                                                <input type="checkbox" name="brand" value="{{ $brand->id }}"
+                                                    class="chk-brand"
+                                                    @php $fb = $f_brands ?? ''; $fbArr = $fb === '' ? [] : explode(',',$fb); @endphp
+                                                    @if (in_array($brand->id, $fbArr)) checked="checked" @endif>
+
+                                                {{ $brand->name }}
+                                            </span>
+                                            <span class="text-right float-end">
+                                                ({{ $brand->products->count() }})
+                                            </span>
+                                        </li>
+                                    @endforeach
                                 </ul>
                             </div>
                         </div>
@@ -240,16 +195,16 @@
                         <div id="accordion-filter-price" class="accordion-collapse collapse show border-0"
                             aria-labelledby="accordion-heading-price" data-bs-parent="#price-filters">
                             <input class="price-range-slider" type="text" name="price_range" value=""
-                                data-slider-min="10" data-slider-max="1000" data-slider-step="5"
-                                data-slider-value="[250,450]" data-currency="$" />
+                                data-slider-min="1" data-slider-max="5000" data-slider-step="5"
+                                data-slider-value="[{{$min_price}},{{$max_price}}]" data-currency="$" />
                             <div class="price-range__info d-flex align-items-center mt-2">
                                 <div class="me-auto">
                                     <span class="text-secondary">Min Price: </span>
-                                    <span class="price-range__min">$250</span>
+                                    <span class="price-range__min">$1</span>
                                 </div>
                                 <div>
                                     <span class="text-secondary">Max Price: </span>
-                                    <span class="price-range__max">$450</span>
+                                    <span class="price-range__max">$5000</span>
                                 </div>
                             </div>
                         </div>
@@ -367,23 +322,19 @@
                     <div
                         class="shop-acs d-flex align-items-center justify-content-between justify-content-md-end flex-grow-1">
                         <select class="shop-acs__select form-select w-auto border-0 py-0 order-1 order-md-0"
-                            aria-label="Page Size" name="pagesize" id="pageSize" onchange="location = this.value;">
-                            <option value="12"{{ $size == 12 ? ' selected' : '' }}>Show</option>
+                            aria-label="Page Size" name="pagesize" id="pagesize" style="margin-right:20px;">
+                            <option value="12"{{ $size == 12 ? ' selected' : '' }}>12</option>
                             <option value="24"{{ $size == 24 ? ' selected' : '' }}>24</option>
                             <option value="48"{{ $size == 48 ? ' selected' : '' }}>48</option>
                             <option value="102"{{ $size == 102 ? ' selected' : '' }}>102</option>
                         </select>
                         <select class="shop-acs__select form-select w-auto border-0 py-0 order-1 order-md-0"
-                            aria-label="Sort Items" name="total-number">
-                            <option selected>Default Sorting</option>
-                            <option value="1">Featured</option>
-                            <option value="2">Best selling</option>
-                            <option value="3">Alphabetically, A-Z</option>
-                            <option value="3">Alphabetically, Z-A</option>
-                            <option value="3">Price, low to high</option>
-                            <option value="3">Price, high to low</option>
-                            <option value="3">Date, old to new</option>
-                            <option value="3">Date, new to old</option>
+                            aria-label="Sort Items" name="orderby" id="orderby">
+                            <option value="1" {{ $order == -1 ? 'selected' : '' }}>Default</option>
+                            <option value="1" {{ $order == 1 ? 'selected' : '' }}>Date, New to Old</option>
+                            <option value="2" {{ $order == 2 ? 'selected' : '' }}>Date, Old to New</option>
+                            <option value="3" {{ $order == 3 ? 'selected' : '' }}>Price, Low to High</option>
+                            <option value="4" {{ $order == 4 ? 'selected' : '' }}>Price, High to Low</option>
                         </select>
 
                         <div class="shop-asc__seprator mx-3 bg-light d-none d-md-block order-md-0"></div>
@@ -521,9 +472,72 @@
 
                 <div class="divider"></div>
                 <div class="flex item-center justify-between flex-wrap gap10 wgp-pagination">
-                    {{ $products->links('pagination::bootstrap-5') }}
+                    {{ $products->withQueryString()->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </section>
     </main>
+    <form id="frmfilter" method="GET" action="{{ route('shop.index') }}">
+        <input type="hidden" name="page" value="{{ $products->currentPage() }}">
+        <input type="hidden" id="size" name="size" value="{{ $size }}">
+        <input type="hidden" id="order" name="order" value="{{ $order }}">
+        <input type="hidden" id="hbnBrands" name="brands">
+        <input type="hidden" id="hbnCategories" name="categories">
+        <input type="hidden" id="min_price" name="min_price" value="{{$min_price}}">
+        <input type="hidden" id="max_price" name="max_price" value="{{$max_price}}">
+
+    </form>
 @endsection
+
+@push('scripts')
+    <script>
+        $(function() {
+            $("#pagesize").on('change', function() {
+                // reset to first page when page size changes
+                $('#frmfilter input[name=page]').val(1);
+                $('#size').val($('#pagesize option:selected').val());
+                $('#frmfilter').submit();
+            })
+            $("#orderby").on('change', function() {
+                $('#order').val($('#orderby option:selected').val());
+                $('#frmfilter').submit();
+            })
+            // checkboxes in blade are named 'brand' (singular). Build comma-separated list and submit.
+            $("input[name='brand']").on('change', function() {
+                var brands = [];
+                $("input[name='brand']:checked").each(function() {
+                    brands.push($(this).val());
+                })
+                $('#hbnBrands').val(brands.join(','));
+                // reset to first page when filters change
+                $('#frmfilter input[name=page]').val(1);
+                $('#frmfilter').submit();
+            })
+            $("input[name='categories']").on('change', function() {
+                var categories = [];
+                $("input[name='categories']:checked").each(function() {
+                    categories.push($(this).val());
+                })
+                $('#hbnCategories').val(categories.join(','));
+                // reset to first page when filters change
+                $('#frmfilter input[name=page]').val(1);
+                $('#frmfilter').submit();
+            })
+            $('.price-range-slider').on('change', function() {
+                var priceRange = $(this).val(); // e.g. "[250,450]"
+                priceRange = priceRange.replace(/[\[\]]/g, ''); // remove brackets
+                var prices = priceRange.split(',');
+                if (prices.length == 2) {
+                    $('#min_price').val(prices[0]);
+                    $('#max_price').val(prices[1]);
+                    // reset to first page when filters change
+                    $('#frmfilter input[name=page]').val(1);
+                    setTimeout(() => {
+                        $('#frmfilter').submit();
+                    }, 2000);
+                }
+            })
+
+        })
+    </script>
+@endpush
