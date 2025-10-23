@@ -31,6 +31,9 @@
                     <a class="tf-button style-1 w208" href="{{ route('admin.orders') }}">Back</a>
                 </div>
                 <div class="table-responsive">
+                    @if (Session::has('success'))
+                        <p class = "alert alert-success">{{ Session::get('success') }}</p>
+                    @endif
                     <table class="table table-striped table-bordered">
                         <thead>
                             <tr>
@@ -54,11 +57,10 @@
                                 <td colspan="5">
                                     @if ($order->status == 'delivered')
                                         <span class="badge bg-success">Delivered</span>
-                                    @elseif ($order->status == 'canceled')
-                                        <span class="badge bg-danger">Canceled</span>
+                                    @elseif ($order->status == 'cancelled')
+                                        <span class="badge bg-danger">Cancelled</span>
                                     @else
                                         <span class="badge bg-warning text-dark">Ordered</span>
-                                        
                                     @endif
                                 </td>
                             </tr>
@@ -90,31 +92,33 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($orderItems as $item )
-                            <tr>
-                                <td class="pname">
-                                    <div class="image">
-                                        <img src="{{ asset('uploads/products/thumbnails/'.$item->product->image) }}" alt="" class="image">
-                                    </div>
-                                    <div class="name">
-                                        <a href="{{ route('shop.product.details', [$item->product->slug]) }}" target="_blank" class="body-title-2">{{ $item->product->name }}</a>
-                                    </div>
-                                </td>
-                                <td class="text-center">${{ $item->price }}</td>
-                                <td class="text-center">{{ $item->quantity }}</td>
-                                <td class="text-center">{{ $item->product->SKU }}</td>
-                                <td class="text-center">{{ $item->product->category->name }}</td>
-                                <td class="text-center">{{ $item->product->brand->name }}</td>
-                                <td class="text-center">{{ $item->options }}</td>
-                                <td class="text-center">{{ $item->rstatus == 0 ? 'No' : 'Yes' }}</td>
-                                <td class="text-center">
-                                    <div class="list-icon-function view-icon">
-                                        <div class="item eye">
-                                            <i class="icon-eye"></i>
+                            @foreach ($orderItems as $item)
+                                <tr>
+                                    <td class="pname">
+                                        <div class="image">
+                                            <img src="{{ asset('uploads/products/thumbnails/' . $item->product->image) }}"
+                                                alt="" class="image">
                                         </div>
-                                    </div>
-                                </td>
-                            </tr>
+                                        <div class="name">
+                                            <a href="{{ route('shop.product.details', [$item->product->slug]) }}"
+                                                target="_blank" class="body-title-2">{{ $item->product->name }}</a>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">${{ $item->price }}</td>
+                                    <td class="text-center">{{ $item->quantity }}</td>
+                                    <td class="text-center">{{ $item->product->SKU }}</td>
+                                    <td class="text-center">{{ $item->product->category->name }}</td>
+                                    <td class="text-center">{{ $item->product->brand->name }}</td>
+                                    <td class="text-center">{{ $item->options }}</td>
+                                    <td class="text-center">{{ $item->rstatus == 0 ? 'No' : 'Yes' }}</td>
+                                    <td class="text-center">
+                                        <div class="list-icon-function view-icon">
+                                            <div class="item eye">
+                                                <i class="icon-eye"></i>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -131,11 +135,11 @@
                 <h5>Shipping Address</h5>
                 <div class="my-account__address-item col-md-6">
                     <div class="my-account__address-item__detail">
-                        <p>{{$order->name}}</p>
-                        <p>{{$order->address}}</p>
-                        <p>{{$order->locality}}</p>
+                        <p>{{ $order->name }}</p>
+                        <p>{{ $order->address }}</p>
+                        <p>{{ $order->locality }}</p>
                         <p>{{ $order->city }} ,{{ $order->country }}</p>
-                        <p>{{ $order->landmark}}</p>
+                        <p>{{ $order->landmark }}</p>
                         <p>{{ $order->zip }}</p>
                         <br>
                         <p>Mobile : {{ $order->phone }}</p>
@@ -159,22 +163,48 @@
                             <th>Total</th>
                             <td>${{ $order->total }}</td>
                             <th>Payment Mode</th>
-                            <td>{{ $transaction->mode }}</td>
+                            <td>{{ $transaction->mode ?? 'N/A' }}</td>
                             <th>Status</th>
                             <td>
-                                @if ($transaction->status == 'approved')
+                                @if ($transaction && $transaction->status == 'approved')
                                     <span class="badge bg-success">Approved</span>
-                                @elseif ($transaction->status == 'declined')
+                                @elseif ($transaction && $transaction->status == 'declined')
                                     <span class="badge bg-danger">Declined</span>
-                                @elseif ($transaction->status == 'refunded')
+                                @elseif ($transaction && $transaction->status == 'refunded')
                                     <span class="badge bg-secondary">Refunded</span>
+                                @elseif ($transaction)
+                                    <span class="badge bg-warning">Pending</span>
                                 @else
-                                    <span class="badge bg-warning ">Pending</span>
+                                    <span class="badge bg-secondary">N/A</span>
                                 @endif
                             </td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="wg-box mt-5">
+                <h5>Update Order Status</h5>
+                <form action="{{ route('admin.order.update.status') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="order_id" value="{{ $order->id }}">
+                    <div class="row">
+                        <div class="col-md-3 ">
+                            <label for="status" class="form-label">Order Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="ordered" {{ $order->status == 'ordered' ? 'selected' : '' }}>Ordered</option>
+                                <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Delivered
+                                </option>
+                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>Cancelled
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary tf-button w208">Update Status</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

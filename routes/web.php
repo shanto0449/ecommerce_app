@@ -42,6 +42,9 @@ Route::get('/order-confirmation', [CartController::class, 'order_confirmation'])
 
 Route::middleware(['auth'])->group(function(){
     Route::get('/place-an-order', [UserController::class, 'index'])->name('user.index');
+    Route::get('/account-orders', [UserController::class, 'orders'])->name('user.orders');
+    Route::get('/account-order-details/{order_id}', [UserController::class, 'order_details'])->name('user.order.details');
+    Route::put('/account-order-cancel', [UserController::class, 'order_cancel'])->name('user.order.cancel');
 
 });
 
@@ -81,6 +84,7 @@ Route::middleware(['auth',AuthAdmin::class])->group(function(){
     // Orders Routes
     Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
     Route::get('/admin/order/details/{order_id}', [AdminController::class, 'order_details'])->name('admin.order.details');
+    Route::put('/admin/order/update-status', [AdminController::class, 'update_order_status'])->name('admin.order.update.status');
     
     
 });

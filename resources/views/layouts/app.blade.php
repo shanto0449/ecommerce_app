@@ -12,6 +12,7 @@
 
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta name="author" content="surfside media" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/sweetalert.min.css') }}">
     <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.gstatic.com/">
     <link
@@ -699,6 +700,7 @@
     <script src="{{ asset('assets/js/plugins/swiper.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugins/countdown.js') }}"></script>
     <script src="{{ asset('assets/js/theme.js') }}"></script>
+     <script src="{{ asset('js/sweetalert.min.js') }}"></script>
 
     @stack('scripts')
 </body>
