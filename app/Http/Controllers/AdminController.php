@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Order;
 use App\Models\Transaction;
 use App\Models\OrderItem;
+use App\Models\Slide;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -244,7 +245,7 @@ class AdminController extends Controller
     //Product Controller
     public function products()
     {
-        $products = Product::with(['category', 'brand'])->orderBy('id','DESC')->paginate(10);
+        $products = Product::with(['category', 'brand'])->orderBy('id', 'DESC')->paginate(10);
         return view('admin.products', compact('products'));
     }
 
@@ -304,7 +305,7 @@ class AdminController extends Controller
             foreach ($request->file('images') as $image) {
                 $file_extension = $image->extension();
                 $file_name = Carbon::now()->timestamp . '_' . uniqid() . '.' . $file_extension;
-                
+
                 $this->GenerateProductThumbailsImage($image, $file_name);
                 $imageFilenames[] = $file_name;
             }
@@ -407,7 +408,7 @@ class AdminController extends Controller
             foreach ($request->file('images') as $image) {
                 $file_extension = $image->extension();
                 $file_name = Carbon::now()->timestamp . '_' . uniqid() . '.' . $file_extension;
-                
+
                 $this->GenerateProductThumbailsImage($image, $file_name);
                 $imageFilenames[] = $file_name;
             }
@@ -509,19 +510,22 @@ class AdminController extends Controller
         return redirect()->route('admin.coupons')->with('success', 'Coupon deleted successfully.');
     }
 
-    public function orders(){
-        $orders = Order::orderBy('id','DESC')->paginate(10);
-        return view('admin.orders',compact('orders'));
+    public function orders()
+    {
+        $orders = Order::orderBy('id', 'DESC')->paginate(10);
+        return view('admin.orders', compact('orders'));
     }
 
-    public function order_details($order_id){
+    public function order_details($order_id)
+    {
         $order = Order::findOrFail($order_id);
-        $orderItems = OrderItem::where('order_id',$order_id)->orderBy('id','DESC')->paginate(10);
-        $transaction = Transaction::where('order_id',$order_id)->first();
-        return view('admin.order-details',compact('order','orderItems','transaction'));
+        $orderItems = OrderItem::where('order_id', $order_id)->orderBy('id', 'DESC')->paginate(10);
+        $transaction = Transaction::where('order_id', $order_id)->first();
+        return view('admin.order-details', compact('order', 'orderItems', 'transaction'));
     }
 
-    public function update_order_status(Request $request){
+    public function update_order_status(Request $request)
+    {
         $request->validate([
             'order_id' => 'required|exists:orders,id',
             'status' => 'required|in:ordered,delivered,cancelled'
@@ -529,19 +533,137 @@ class AdminController extends Controller
 
         $order = Order::findOrFail($request->order_id);
         $order->status = $request->status;
-        if($request->status == 'delivered'){
+        if ($request->status == 'delivered') {
             $order->delivered_date = Carbon::now();
         } else if ($request->status == 'cancelled') {
             $order->canceled_date = Carbon::now();
         }
         $order->save();
 
-        if($request->status == 'delivered'){
-            $transaction = Transaction::where('order_id',$order->id)->first();
+        if ($request->status == 'delivered') {
+            $transaction = Transaction::where('order_id', $order->id)->first();
             $transaction->status = 'approved';
             $transaction->save();
         }
 
-        return redirect()->back()->with('success','Order status updated successfully.');
+        return redirect()->back()->with('success', 'Order status updated successfully.');
+    }
+
+    public function slides()
+    {
+        $slides = Slide::orderBy('id', 'DESC')->paginate(10);
+        return view('admin.slides', compact('slides'));
+    }
+
+    public function slide_add()
+    {
+        return view('admin.slide-add');
+    }
+
+    public function slide_store(Request $request)
+    {
+        $request->validate([
+            'tagline' => 'required|string',
+            'title' => 'required|string',
+            'subtitle' => 'required|string',
+            'link' => 'required|url',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status' => 'required|in:0,1',
+        ]);
+
+        $slide = new Slide();
+        $slide->tagline = $request->tagline;
+        $slide->title = $request->title;
+        $slide->subtitle = $request->subtitle;
+        $slide->link = $request->link;
+        $slide->status = $request->status;
+
+        $image = $request->file('image');
+        $file_extension = $request->file('image')->extension();
+        $file_name = Carbon::now()->timestamp . '.' . $file_extension;
+
+        $this->GenerateSlideThumbailsImage($image, $file_name);
+
+        $slide->image = $file_name;
+        $slide->save();
+
+        return redirect()->route('admin.slides')->with('success', 'Slide added successfully.');
+    }
+
+    public function GenerateSlideThumbailsImage($image, $imageName)
+    {
+        $destinationPath = public_path('uploads/slides/');
+
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+
+        $manager = new ImageManager(new Driver());
+
+        $img = $manager->read($image->getRealPath());
+        $img->resize(400, 600, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        });
+
+        $img->save($destinationPath . $imageName);
+    }
+
+    public function slide_edit($id)
+    {
+        $slide = Slide::findOrFail($id);
+        return view('admin.slide-edit', compact('slide'));
+    }
+
+    public function slide_update(Request $request)
+    {
+        $request->validate([
+            'tagline' => 'required|string',
+            'title' => 'required|string',
+            'subtitle' => 'required|string',
+            'link' => 'required|url',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status' => 'required|in:0,1',
+        ]);
+
+        $slide = Slide::findOrFail($request->id);
+        $slide->tagline = $request->tagline;
+        $slide->title = $request->title;
+        $slide->subtitle = $request->subtitle;
+        $slide->link = $request->link;
+        $slide->status = $request->status;
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($slide->image && file_exists(public_path('uploads/slides/' . $slide->image))) {
+                unlink(public_path('uploads/slides/' . $slide->image));
+            }
+
+            $image = $request->file('image');
+            $file_extension = $request->file('image')->extension();
+            $file_name = Carbon::now()->timestamp . '.' . $file_extension;
+
+            $this->GenerateSlideThumbailsImage($image, $file_name);
+
+            $slide->image = $file_name;
+        }
+
+        $slide->save();
+
+        return redirect()->route('admin.slides')->with('success', 'Slide updated successfully.');
+    }
+    
+
+    public function slide_delete($id)
+    {
+        $slide = Slide::findOrFail($id);
+
+        if ($slide->image && file_exists(public_path('uploads/slides/' . $slide->image))) {
+            unlink(public_path('uploads/slides/' . $slide->image));
+        }
+
+        $slide->delete();
+
+        return redirect()->route('admin.slides')->with('success', 'Slide deleted successfully.');
     }
 }
