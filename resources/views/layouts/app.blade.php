@@ -26,6 +26,75 @@
         integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
 
+    <style>
+        .search-popup__results {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        #box-content-search {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .search-suggestion__item {
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-suggestion__item:last-child {
+            border-bottom: none;
+        }
+        
+        .search-suggestion__item-link {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            text-decoration: none;
+            color: inherit;
+            transition: background-color 0.3s;
+        }
+        
+        .search-suggestion__item-link:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .search-suggestion__item-image {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+            margin-right: 15px;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+        
+        .search-suggestion__item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .search-suggestion__item-content {
+            flex-grow: 1;
+        }
+        
+        .search-suggestion__item-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0 0 5px 0;
+            color: #222;
+        }
+        
+        .search-suggestion__item-price {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            color: #666;
+        }
+    </style>
+
     @stack('styles')
 
 </head>
@@ -296,7 +365,7 @@
                 <form action="#" method="GET" class="search-field position-relative mt-4 mb-3">
                     <div class="position-relative">
                         <input class="search-field__input w-100 border rounded-1" type="text"
-                            name="search-keyword" placeholder="Search products" />
+                            name="search-keyword" id="search-input-mobile" placeholder="Search products" />
                         <button class="btn-icon search-popup__submit pb-0 me-2" type="submit">
                             <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -307,7 +376,9 @@
                     </div>
 
                     <div class="position-absolute start-0 top-100 m-0 w-100">
-                        <div class="search-result"></div>
+                        <div class="search-result">
+                            <ul id="box-content-search-mobile"></ul>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -439,7 +510,7 @@
                                 <p class="text-uppercase text-secondary fw-medium mb-4">What are you looking for?</p>
                                 <div class="position-relative">
                                     <input class="search-field__input search-popup__input w-100 fw-medium"
-                                        type="text" name="search-keyword" placeholder="Search products" />
+                                        type="text" name="search-keyword" id="search-input" placeholder="Search products" />
                                     <button class="btn-icon search-popup__submit" type="submit">
                                         <svg class="d-block" width="20" height="20" viewBox="0 0 20 20"
                                             fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -450,25 +521,7 @@
                                 </div>
 
                                 <div class="search-popup__results">
-                                    <div class="sub-menu search-suggestion">
-                                        <h6 class="sub-menu__title fs-base">Quicklinks</h6>
-                                        <ul class="sub-menu__list list-unstyled">
-                                            <li class="sub-menu__item"><a href="shop2.html"
-                                                    class="menu-link menu-link_us-s">New Arrivals</a>
-                                            </li>
-                                            <li class="sub-menu__item"><a href="#"
-                                                    class="menu-link menu-link_us-s">Dresses</a></li>
-                                            <li class="sub-menu__item"><a href="shop3.html"
-                                                    class="menu-link menu-link_us-s">Accessories</a>
-                                            </li>
-                                            <li class="sub-menu__item"><a href="#"
-                                                    class="menu-link menu-link_us-s">Footwear</a></li>
-                                            <li class="sub-menu__item"><a href="#"
-                                                    class="menu-link menu-link_us-s">Sweatshirt</a></li>
-                                        </ul>
-                                    </div>
-
-                                    <div class="search-result row row-cols-5"></div>
+                                    <ul id="box-content-search"></ul>
                                 </div>
                             </form>
                         </div>
@@ -701,6 +754,74 @@
     <script src="{{ asset('assets/js/plugins/countdown.js') }}"></script>
     <script src="{{ asset('assets/js/theme.js') }}"></script>
      <script src="{{ asset('js/sweetalert.min.js') }}"></script>
+
+    <script>
+        $(function(){
+            // Prevent form submission
+            $('.search-field').on('submit', function(e){
+                e.preventDefault();
+            });
+
+            // Search functionality for both desktop and mobile
+            function performSearch(inputElement, resultsElement) {
+                $(inputElement).on('keyup', function(){
+                    let query = $(this).val();
+                    console.log('Searching for:', query);
+                    
+                    if(query.length > 2){
+                        $.ajax({
+                            url: "{{ route('home.search') }}",
+                            type: "GET",
+                            data: {'search': query},
+                            dataType: 'json',
+                            success: function(data){
+                                console.log('Search results:', data);
+                                $(resultsElement).html('');
+                                
+                                if(data.length > 0){
+                                    $.each(data, function(index, item){
+                                        var url = "{{ route('shop.product.details', ':slug') }}";
+                                        url = url.replace(':slug', item.slug);
+                                        
+                                        var imageUrl = "{{ asset('uploads/products/thumbnails') }}/" + item.image;
+                                        var price = item.sale_price ? '$' + item.sale_price : '$' + item.regular_price;
+                                        
+                                        $(resultsElement).append(`
+                                            <li class="search-suggestion__item">
+                                                <a href="${url}" class="search-suggestion__item-link">
+                                                    <div class="search-suggestion__item-image">
+                                                        <img src="${imageUrl}" alt="${item.name}" />
+                                                    </div>
+                                                    <div class="search-suggestion__item-content">
+                                                        <h6 class="search-suggestion__item-title">${item.name}</h6>
+                                                        <p class="search-suggestion__item-price">${price}</p>
+                                                    </div>
+                                                </a>
+                                            </li>
+                                        `);
+                                    });
+                                } else {
+                                    $(resultsElement).append('<li class="text-center py-3">No products found</li>');
+                                }
+                            },
+                            error: function(xhr, status, error){
+                                console.log('AJAX Error:', error);
+                                console.log('Response:', xhr.responseText);
+                            }
+                        });
+                    } else {
+                        $(resultsElement).html('');
+                    }
+                });
+            }
+
+            // Initialize search for desktop
+            performSearch('#search-input', '#box-content-search');
+            
+            // Initialize search for mobile
+            performSearch('#search-input-mobile', '#box-content-search-mobile');
+        });
+    </script>
 
     @stack('scripts')
 </body>

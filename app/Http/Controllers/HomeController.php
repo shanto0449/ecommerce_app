@@ -42,4 +42,24 @@ class HomeController extends Controller
         session()->flash('success', 'Thank you for contacting us! We will get back to you soon.');
         return redirect()->back();
     }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('search');
+        
+        if ($request->ajax()) {
+            $products = Product::where('name', 'LIKE', "%{$query}%")
+                ->orWhere('short_description', 'LIKE', "%{$query}%")
+                ->take(10)
+                ->get();
+            
+            return response()->json($products);
+        }
+        
+        $products = Product::where('name', 'LIKE', "%{$query}%")
+            ->orWhere('short_description', 'LIKE', "%{$query}%")
+            ->paginate(12);
+        
+        return view('search', compact('products', 'query'));
+    }
 }
