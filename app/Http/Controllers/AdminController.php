@@ -729,4 +729,24 @@ class AdminController extends Controller
 
         return redirect()->route('admin.contacts')->with('success', 'Message deleted successfully.');
     }
+
+    public function search (Request $request)
+    {
+        $query = $request->input('search');
+        
+        if ($request->ajax()) {
+            $products = Product::where('name', 'LIKE', "%{$query}%")
+                ->orWhere('short_description', 'LIKE', "%{$query}%")
+                ->take(10)
+                ->get();
+            
+            return response()->json($products);
+        }
+        
+        $products = Product::where('name', 'LIKE', "%{$query}%")
+            ->orWhere('short_description', 'LIKE', "%{$query}%")
+            ->paginate(12);
+        
+        return view('admin.search', compact('products', 'query'));
+    }
 }

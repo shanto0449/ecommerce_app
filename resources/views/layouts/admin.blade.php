@@ -194,130 +194,17 @@
 
                                 <form class="form-search flex-grow">
                                     <fieldset class="name">
-                                        <input type="text" placeholder="Search here..." class="show-search"
+                                        <input type="text" placeholder="Search here..." id="search-input" class="show-search"
                                             name="name" tabindex="2" value="" aria-required="true"
                                             required="">
                                     </fieldset>
                                     <div class="button-submit">
                                         <button class="" type="submit"><i class="icon-search"></i></button>
                                     </div>
-                                    <div class="box-content-search" id="box-content-search">
-                                        <ul class="mb-24">
-                                            <li class="mb-14">
-                                                <div class="body-title">Top selling product</div>
-                                            </li>
-                                            <li class="mb-14">
-                                                <div class="divider"></div>
-                                            </li>
-                                            <li>
-                                                <ul>
-                                                    <li class="product-item gap14 mb-10">
-                                                        <div class="image no-bg">
-                                                            <img src="images/products/17.png" alt="">
-                                                        </div>
-                                                        <div class="flex items-center justify-between gap20 flex-grow">
-                                                            <div class="name">
-                                                                <a href="product-list.html" class="body-text">Dog Food
-                                                                    Rachael Ray Nutrish®</a>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <li class="mb-10">
-                                                        <div class="divider"></div>
-                                                    </li>
-                                                    <li class="product-item gap14 mb-10">
-                                                        <div class="image no-bg">
-                                                            <img src="images/products/18.png" alt="">
-                                                        </div>
-                                                        <div class="flex items-center justify-between gap20 flex-grow">
-                                                            <div class="name">
-                                                                <a href="product-list.html" class="body-text">Natural
-                                                                    Dog Food Healthy Dog Food</a>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <li class="mb-10">
-                                                        <div class="divider"></div>
-                                                    </li>
-                                                    <li class="product-item gap14">
-                                                        <div class="image no-bg">
-                                                            <img src="images/products/19.png" alt="">
-                                                        </div>
-                                                        <div class="flex items-center justify-between gap20 flex-grow">
-                                                            <div class="name">
-                                                                <a href="product-list.html" class="body-text">Freshpet
-                                                                    Healthy Dog Food and Cat</a>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </li>
-                                        </ul>
-                                        <ul class="">
-                                            <li class="mb-14">
-                                                <div class="body-title">Order product</div>
-                                            </li>
-                                            <li class="mb-14">
-                                                <div class="divider"></div>
-                                            </li>
-                                            <li>
-                                                <ul>
-                                                    <li class="product-item gap14 mb-10">
-                                                        <div class="image no-bg">
-                                                            <img src="images/products/20.png" alt="">
-                                                        </div>
-                                                        <div class="flex items-center justify-between gap20 flex-grow">
-                                                            <div class="name">
-                                                                <a href="product-list.html" class="body-text">Sojos
-                                                                    Crunchy Natural Grain Free...</a>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <li class="mb-10">
-                                                        <div class="divider"></div>
-                                                    </li>
-                                                    <li class="product-item gap14 mb-10">
-                                                        <div class="image no-bg">
-                                                            <img src="images/products/21.png" alt="">
-                                                        </div>
-                                                        <div class="flex items-center justify-between gap20 flex-grow">
-                                                            <div class="name">
-                                                                <a href="product-list.html" class="body-text">Kristin
-                                                                    Watson</a>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <li class="mb-10">
-                                                        <div class="divider"></div>
-                                                    </li>
-                                                    <li class="product-item gap14 mb-10">
-                                                        <div class="image no-bg">
-                                                            <img src="images/products/22.png" alt="">
-                                                        </div>
-                                                        <div class="flex items-center justify-between gap20 flex-grow">
-                                                            <div class="name">
-                                                                <a href="product-list.html" class="body-text">Mega
-                                                                    Pumpkin Bone</a>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <li class="mb-10">
-                                                        <div class="divider"></div>
-                                                    </li>
-                                                    <li class="product-item gap14">
-                                                        <div class="image no-bg">
-                                                            <img src="images/products/23.png" alt="">
-                                                        </div>
-                                                        <div class="flex items-center justify-between gap20 flex-grow">
-                                                            <div class="name">
-                                                                <a href="product-list.html" class="body-text">Mega
-                                                                    Pumpkin Bone</a>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </li>
-                                        </ul>
+                                    <div class="box-content-search" id="search-results-container">
+                                      <ul id="box-content-search">
+
+                                      </ul>
                                     </div>
                                 </form>
 
@@ -480,6 +367,85 @@
     <script src="{{ asset('js/sweetalert.min.js') }}"></script>
     <script src="{{ asset('js/apexcharts/apexcharts.js') }}"></script>
     <script src="{{ asset('js/main.js') }}"></script>
+     <script>
+        $(function(){
+            // Prevent form submission
+            $('.form-search').on('submit', function(e){
+                e.preventDefault();
+            });
+
+            // Search functionality for both desktop and mobile
+            function performSearch(inputElement, resultsElement) {
+                $(inputElement).on('keyup', function(){
+                    let query = $(this).val();
+                    console.log('Searching for:', query);
+                    
+                    if(query.length > 2){
+                        $.ajax({
+                            url: "{{ route('admin.search') }}",
+                            type: "GET",
+                            data: {'search': query},
+                            dataType: 'json',
+                            success: function(data){
+                                console.log('Search results:', data);
+                                $(resultsElement).html('');
+                                
+                                // Show the search results container
+                                $('#search-results-container').addClass('active');
+                                
+                                if(data.length > 0){
+                                    $.each(data, function(index, item){
+                                        var url = "{{ route('admin.product.edit', ':id') }}";
+                                        url = url.replace(':id', item.id);
+                                        
+                                        var imageUrl = "{{ asset('uploads/products/thumbnails') }}/" + item.image;
+                                        var price = item.sale_price ? '$' + item.sale_price : '$' + item.regular_price;
+                                        
+                                        $(resultsElement).append(`
+                                            <li class="product-item gap14 mb-10">
+                                                <div class="image no-bg">
+                                                    <img src="${imageUrl}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover;">
+                                                </div>
+                                                <div class="flex items-center justify-between gap20 flex-grow">
+                                                    <div class="name">
+                                                        <a href="${url}" class="body-text">${item.name}</a>
+                                                    </div>
+                                                    <div class="body-text">${price}</div>
+                                                </div>
+                                            </li>
+                                        `);
+                                    });
+                                } else {
+                                    $(resultsElement).append('<li class="text-center py-3">No products found</li>');
+                                }
+                            },
+                            error: function(xhr, status, error){
+                                console.log('AJAX Error:', error);
+                                console.log('Response:', xhr.responseText);
+                            }
+                        });
+                    } else {
+                        $(resultsElement).html('');
+                        // Hide the search results container when query is cleared
+                        $('#search-results-container').removeClass('active');
+                    }
+                });
+            }
+
+            // Initialize search for desktop
+            performSearch('#search-input', '#box-content-search');
+            
+            // Initialize search for mobile
+            performSearch('#search-input-mobile', '#box-content-search-mobile');
+
+            // Close search results when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.form-search').length) {
+                    $('#search-results-container').removeClass('active');
+                }
+            });
+        });
+    </script>
    
     @stack('scripts')
 </body>
